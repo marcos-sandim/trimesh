@@ -180,7 +180,7 @@ def elements_to_kwargs(elements):
             eg: mesh = trimesh.Trimesh(**kwargs)
     '''
     vertices = np.column_stack([elements['vertex']['data'][i] for i in 'xyz'])
-    if not util.is_shape(vertices, (-1, 3)):
+    if not (util.is_shape(vertices, (-1, 3)) or np.size(vertices) == 0):
         raise ValueError('Vertices were not (n,3)!')
 
     index_names = ['vertex_index',
@@ -209,7 +209,7 @@ def elements_to_kwargs(elements):
     else:
         raise ValueError('Couldn\'t extract face data!')
 
-    if not util.is_shape(faces, (-1, (3, 4))):
+    if not (util.is_shape(faces, (-1, (3, 4))) or np.size(faces) == 0):
         raise ValueError('Faces weren\'t (n,(3|4))!')
 
     result = {'vertices': vertices,
@@ -285,7 +285,7 @@ def ply_ascii(elements, file_obj):
                 # if an element contains a list property handle it here
 
                 # the first value is a count, followed by data
-                list_count = int(raw[position + rows])
+                list_count = int(raw[position + rows]) if position + rows < raw.shape[0] else 0
 
                 # ignore the count and take the data
                 columns.append([rows + 1,
@@ -355,8 +355,9 @@ def ply_binary(elements, file_obj):
                     else:
                         offset = np.dtype(prior_data).itemsize
                     file_obj.seek(p_current + offset)
-                    size = np.fromstring(file_obj.read(field_dtype.itemsize),
-                                         dtype=field_dtype)[0]
+                    read_data = (np.fromstring(file_obj.read(field_dtype.itemsize),
+                                         dtype=field_dtype))
+                    size = read_data[0] if read_data.size else 0
                     props[k] = props[k].replace('$LIST', str(size))
                 prior_data += props[k] + ','
             itemsize = np.dtype(', '.join(props.values())).itemsize

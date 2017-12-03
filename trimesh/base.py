@@ -321,7 +321,7 @@ class Trimesh(object):
         # pull faces directly from DataStore to avoid infinite recursion
         if faces is None:
             faces = self._data['faces']
-        if np.shape(self._cache.get('face_normals')) != np.shape(faces):
+        if np.shape(self._cache.get('face_normals')) != np.shape(faces) and np.size(faces):
             log.debug('Generating face normals as shape was incorrect')
             tri_cached = self.vertices.view(np.ndarray)[faces]
             tri_cross = triangles.cross(tri_cached)
